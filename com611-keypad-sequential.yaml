@@ -6,13 +6,14 @@ blueprint:
     runtime. Configure each device address with its own dedicated timer helper.
     Each rule must start with the documented match-mode condition and its Then
     block must start with the documented Variables action. Invalid device/timer
-    configuration fails closed. Function and bell payloads require 1-8 ASCII digits; Door Button
-    requires an empty code. Rule conditions decide which codes are authorized.
+    configuration fails closed. Function and bell payloads require 1-8 ASCII
+    digits; Door Button requires an empty code. Rule conditions decide which
+    codes are authorized.
     Built-in optional diagnostics omit codes and trace storage is disabled.
     Keep real codes out of version control. See the repository README for setup.
   domain: automation
   homeassistant:
-    min_version: "2024.10.0"
+    min_version: "2026.9.4"
   input:
     devices:
       name: Devices and Cooldown Timers

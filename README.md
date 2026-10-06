@@ -91,23 +91,8 @@ cooldowns across restarts. Map each address to its timer in the blueprint's
 **Devices and Cooldown Timers** input. Addresses and timers must be unique within
 the automation, and timers must not be shared with other automations.
 
-For example, the `devices` input can contain:
-
-```yaml
-devices:
-	- address: "6"
-		timer: timer.keypad_6
-	- address: "7"
-		timer: timer.keypad_7
-	- address: "9"
-		timer: timer.keypad_9
-	- address: "8"
-		timer: timer.keypad_8
-	- address: "2"
-		timer: timer.keypad_2
-	- address: "4"
-		timer: timer.keypad_4
-```
+The [example automation](examples/com611-keypad-sequential.yaml) maps addresses
+6, 7, 9, 8, 2, and 4 to dedicated timer helpers.
 
 An attempt starts that device's cooldown before rule evaluation, including on
 rejection. There is no global cooldown delay. A timer that is active, paused,
@@ -142,62 +127,10 @@ of arbitrary native rules. Do not change its bookkeeping variables in later
 actions. A Stop action or an action failure ends the run before its final
 diagnostics/rejection handling.
 
-The following `rules` input illustrates three groups. Codes and helper names
-are placeholders; do not publish real codes. Replace the harmless log actions
-after Variables with the inline actions you want:
-
-```yaml
-rules:
-	- alias: Function group
-		if:
-			- condition: template
-				value_template: "{{ keypad_match_mode == 'all' or not keypad_matched }}"
-			- condition: template
-				value_template: >-
-					{{ keypad.address in ['6', '7', '9']
-						 and keypad.event == 'function' and keypad.code == '0001' }}
-		then:
-			- variables:
-					keypad_rule: Function group
-					keypad_matched: true
-					keypad_matched_rules: "{{ keypad_matched_rules + [keypad_rule] }}"
-			- action: logbook.log
-				data:
-					name: Function group
-					message: Accepted
-	- alias: Bell group
-		if:
-			- condition: template
-				value_template: "{{ keypad_match_mode == 'all' or not keypad_matched }}"
-			- condition: template
-				value_template: >-
-					{{ keypad.address in ['8', '2']
-						 and keypad.event == 'ring' and keypad.code == '0002' }}
-		then:
-			- variables:
-					keypad_rule: Bell group
-					keypad_matched: true
-					keypad_matched_rules: "{{ keypad_matched_rules + [keypad_rule] }}"
-			- action: logbook.log
-				data:
-					name: Bell group
-					message: Accepted
-	- alias: Door button
-		if:
-			- condition: template
-				value_template: "{{ keypad_match_mode == 'all' or not keypad_matched }}"
-			- condition: template
-				value_template: "{{ keypad.address == '4' and keypad.event == 'door_button' }}"
-		then:
-			- variables:
-					keypad_rule: Door button
-					keypad_matched: true
-					keypad_matched_rules: "{{ keypad_matched_rules + [keypad_rule] }}"
-			- action: logbook.log
-				data:
-					name: Door button
-					message: Accepted
-```
+The [example automation](examples/com611-keypad-sequential.yaml) contains complete
+Function, Bell, and Door Button rules, including the required gate and Variables
+action. Codes and helper names are placeholders; do not publish real codes.
+Replace the harmless log actions after Variables with the inline actions you want.
 
 Registered devices with invalid payloads or no matching rule run the shared
 rejected actions once. Unregistered devices and unsupported events are ignored.
@@ -208,5 +141,6 @@ contain only address, event, outcome, and matched rule names; they omit codes.
 Keep codes out of rule names and your own logs/actions. Event payloads still
 contain codes, and custom actions can expose them. Trace storage remains disabled.
 
-Requires Home Assistant 2024.10.0 or newer. After publishing, import:
+Requires Home Assistant 2026.9.4 or newer, the released selector schema verified
+for this blueprint. After publishing, import:
 https://github.com/farosch/ha_blueprints/blob/main/com611-keypad-sequential.yaml

@@ -1,0 +1,70 @@
+alias: COM611 Dynamic Keypad Rules
+use_blueprint:
+  path: farosch/com611-keypad-sequential.yaml
+  input:
+    devices:
+      - address: "6"
+        timer: timer.keypad_6
+      - address: "7"
+        timer: timer.keypad_7
+      - address: "9"
+        timer: timer.keypad_9
+      - address: "8"
+        timer: timer.keypad_8
+      - address: "2"
+        timer: timer.keypad_2
+      - address: "4"
+        timer: timer.keypad_4
+    match_mode: all
+    cooldown: 5
+    diagnostics: false
+    rules:
+      - alias: Function group
+        if:
+          - condition: template
+            value_template: "{{ keypad_match_mode == 'all' or not keypad_matched }}"
+          - condition: template
+            value_template: >-
+              {{ keypad.address in ['6', '7', '9']
+                 and keypad.event == 'function' and keypad.code == '0001' }}
+        then:
+          - variables:
+              keypad_rule: Function group
+              keypad_matched: true
+              keypad_matched_rules: "{{ keypad_matched_rules + [keypad_rule] }}"
+          - action: logbook.log
+            data:
+              name: Function group
+              message: Accepted
+      - alias: Bell group
+        if:
+          - condition: template
+            value_template: "{{ keypad_match_mode == 'all' or not keypad_matched }}"
+          - condition: template
+            value_template: >-
+              {{ keypad.address in ['8', '2']
+                 and keypad.event == 'ring' and keypad.code == '0002' }}
+        then:
+          - variables:
+              keypad_rule: Bell group
+              keypad_matched: true
+              keypad_matched_rules: "{{ keypad_matched_rules + [keypad_rule] }}"
+          - action: logbook.log
+            data:
+              name: Bell group
+              message: Accepted
+      - alias: Door button
+        if:
+          - condition: template
+            value_template: "{{ keypad_match_mode == 'all' or not keypad_matched }}"
+          - condition: template
+            value_template: "{{ keypad.address == '4' and keypad.event == 'door_button' }}"
+        then:
+          - variables:
+              keypad_rule: Door button
+              keypad_matched: true
+              keypad_matched_rules: "{{ keypad_matched_rules + [keypad_rule] }}"
+          - action: logbook.log
+            data:
+              name: Door button
+              message: Accepted
