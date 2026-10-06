@@ -1,20 +1,25 @@
 blueprint:
-  name: Keypad Code Validation
+  name: Siedle COM611 Keypad on ESP
   description: >-
     Handle esphome.com611 function, bell, or door-button events in Home Assistant.
     Add independent rules with their own addresses, event, codes, and script.
     Every rule requires at least one nonblank device address.
-    All matching rules run in list order. Function and bell events require a
+    Enable rules explicitly and choose all matches or the first match in list
+    order. Function and bell events require a
     valid code. Door-button rules explicitly run without a code.
     The keypad beep acknowledges receipt, not authorization.
-    Attempts during the shared cooldown are ignored. Keep real codes out of
-    version control; event payloads contain codes.
+    Attempts during the shared cooldown are ignored. Scripts receive structured
+    address, event, and rule metadata without codes. Rejections can be reported
+    in Activity without codes. Keep real codes out of version control; event
+    payloads contain codes. Keep codes out of rule names.
   domain: automation
+  homeassistant:
+    min_version: "2026.9.4"
   input:
     rules:
       name: Keypad Rules
       description: >-
-        Each rule runs its selected script when its addresses, event, and code
+        Each enabled rule runs its selected script when its addresses, event, and code
         match. Bell uses the event value ring. Codes are not used for Door Button.
         No events are handled when this list is empty.
       default: []
@@ -24,10 +29,15 @@ blueprint:
           label_field: name
           fields:
             name:
-              label: Rule Name
+              label: Rule Name (Required)
               required: true
               selector:
                 text:
+            enabled:
+              label: Enabled
+              required: true
+              selector:
+                boolean:
             addresses:
               label: Device Addresses (Required)
               required: true
@@ -58,6 +68,24 @@ blueprint:
                 entity:
                   filter:
                     domain: script
+    match_mode:
+      name: Matching Mode
+      default: all
+      selector:
+        select:
+          options:
+            - label: Run All Matching Rules
+              value: all
+            - label: Run First Matching Rule Only
+              value: first
+    report_rejections:
+      name: Report Rejections in Activity
+      description: >-
+        Reports address, event, rule names, and rejection reason. Never reports
+        the code. Keep codes out of rule names and custom feedback actions.
+      default: true
+      selector:
+        boolean:
     rejected_actions:
       name: Rejected Actions
       description: >-
@@ -87,10 +115,14 @@ trace:
 
 variables:
   rules: !input rules
+  match_mode: !input match_mode
+  report_rejections: !input report_rejections
   event_rules: >-
     {% set matched = namespace(rules=[]) %}
     {% for rule in rules %}
       {% if rule is mapping
+        and rule.get('enabled', false) is sameas true
+        and rule.get('name') is string and rule.get('name') | trim != ''
             and rule.get('addresses', []) is sequence
             and rule.get('addresses', []) is not string
             and rule.get('addresses', []) is not mapping
@@ -124,6 +156,19 @@ variables:
     {% endfor %}
     {{ matched.rules }}
 
+  selected_rules: >-
+    {{ matching_rules[:1] if match_mode == 'first' else matching_rules }}
+  rejection_reason: >-
+    {% set code = trigger.event.data.get('code') %}
+    {% if trigger.event.data.get('action') == 'door_button' %}
+      unexpected_door_button_code
+    {% elif code is not string or not (1 <= code | length <= 8)
+            or not code.isascii() or not code.isdigit() %}
+      invalid_code_format
+    {% else %}
+      code_not_allowed
+    {% endif %}
+
 triggers:
   - trigger: event
     event_type: esphome.com611
@@ -136,16 +181,27 @@ actions:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ matching_rules | length > 0 }}"
+            value_template: "{{ selected_rules | length > 0 }}"
         sequence:
           - repeat:
-              for_each: "{{ matching_rules }}"
+              for_each: "{{ selected_rules }}"
               sequence:
                 - action: "{{ repeat.item.script }}"
                   data:
-                    keypad_address: "{{ trigger.event.data.get('address') }}"
-                    keypad_event: "{{ trigger.event.data.get('action') }}"
-                    keypad_code: "{{ trigger.event.data.get('code') }}"
-                    keypad_rule: "{{ repeat.item.name }}"
-    default: !input rejected_actions
+                    keypad: >-
+                      {{ {'address': trigger.event.data.get('address') | string,
+                          'event': trigger.event.data.get('action'),
+                          'rule': repeat.item.name} }}
+    default:
+      - if: "{{ report_rejections }}"
+        then:
+          - action: logbook.log
+            data:
+              name: COM611 Keypad
+              message: >-
+                Rejected; address={{ trigger.event.data.get('address') }};
+                event={{ trigger.event.data.get('action') }};
+                reason={{ rejection_reason }};
+                rules={{ event_rules | map(attribute='name') | join(', ') }}
+      - sequence: !input rejected_actions
   - delay: !input cooldown
