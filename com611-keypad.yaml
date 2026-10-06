@@ -1,17 +1,22 @@
 blueprint:
   name: Siedle COM611 Keypad on ESP
   description: >-
-    Handle esphome.com611 function, bell, or door-button events in Home Assistant.
-    Add independent rules with their own addresses, event, codes, and script.
-    Every rule requires at least one nonblank device address.
-    Enable rules explicitly and choose all matches or the first match in list
-    order. Function and bell events require a
-    valid code. Door-button rules explicitly run without a code.
+    Respond to Siedle COM611 keypad events sent by an ESP32 through ESPHome
+    (esphome.com611). Create named rules with device addresses, a keypad event,
+    authorized codes, and a script, then enable each rule explicitly.
+    Function and bell events require an exact code match. Door-button rules
+    authorize an empty-code button event without checking a code list.
+
+    Run all matching rules or only the first match, in list order. Scripts receive
+    keypad.address, keypad.event, and keypad.rule as structured text metadata;
+    entered codes and configured code lists are not forwarded. Unconfigured
+    address/event combinations are ignored. Attempts while the automation is
+    running or waiting through its shared cooldown are discarded, not queued.
+
+    Rejections can be reported in Activity without entered codes. Automation
+    trace storage is disabled, but incoming event payloads still contain codes.
+    Keep real codes out of version control, rule names, and custom logs.
     The keypad beep acknowledges receipt, not authorization.
-    Attempts during the shared cooldown are ignored. Scripts receive structured
-    address, event, and rule metadata without codes. Rejections can be reported
-    in Activity without codes. Keep real codes out of version control; event
-    payloads contain codes. Keep codes out of rule names.
   domain: automation
   homeassistant:
     min_version: "2026.9.4"
@@ -19,9 +24,21 @@ blueprint:
     rules:
       name: Keypad Rules
       description: >-
-        Each enabled rule runs its selected script when its addresses, event, and code
-        match. Bell uses the event value ring. Codes are not used for Door Button.
-        No events are handled when this list is empty.
+        Add one rule per address/event/code combination and choose the script
+        to run. Give each rule a nonblank name and turn on Enabled; disabled
+        rules do not match or cause rejection feedback. List order sets priority.
+
+        Enter each address as a separate text entry using the address from the
+        incoming event, not Home Assistant's internal device ID. At least one
+        nonblank address is required; any listed device can trigger the rule.
+        Select Function (function), Bell / Ring (ring), or Door Button (door_button).
+
+        For Function and Bell, enter each authorized code separately as text:
+        1-8 ASCII digits, with leading zeros preserved and no surrounding spaces.
+        An empty code list authorizes neither event. Door Button ignores this
+        list and requires an empty code in the incoming event. Scripts receive
+        only keypad.address, keypad.event, and keypad.rule. An empty rule list
+        handles no events. Keep codes out of rule names.
       default: []
       selector:
         object:
@@ -70,6 +87,11 @@ blueprint:
                     domain: script
     match_mode:
       name: Matching Mode
+      description: >-
+        All matches runs every matching enabled rule in list order, waiting for
+        each script to finish. First match runs only the first matching enabled
+        rule. Reorder rules to change priority; disabled or nonmatching rules
+        are skipped. An action error can stop the remaining scripts.
       default: all
       selector:
         select:
@@ -81,24 +103,36 @@ blueprint:
     report_rejections:
       name: Report Rejections in Activity
       description: >-
-        Reports address, event, rule names, and rejection reason. Never reports
-        the code. Keep codes out of rule names and custom feedback actions.
+        Add an Activity entry when an enabled rule matches the address and event,
+        but no rule accepts the attempt. Includes the address, event, applicable
+        rule names, and a reason: invalid_code_format, code_not_allowed, or
+        unexpected_door_button_code. Entered codes are omitted. Turning this off
+        does not disable Rejected Actions. Unconfigured or disabled rules, and
+        attempts discarded while busy, are not reported. Keep codes out of rule
+        names and custom feedback actions.
       default: true
       selector:
         boolean:
     rejected_actions:
       name: Rejected Actions
       description: >-
-        Runs once when a configured address/event has no matching code rule.
-        Configure feedback only; never unlock on rejection.
+        Run these actions once when at least one enabled rule matches the device
+        address and keypad event, but none accepts the attempt. This includes
+        malformed or unauthorized function/bell codes and door-button events
+        with a missing or nonempty code. Runs independently of Activity reporting.
+        Unconfigured address/event combinations are ignored. Use feedback only,
+        such as a notification or indicator; never unlock on rejection or log codes.
       default: []
       selector:
         action:
     cooldown:
       name: Attempt Cooldown
       description: >-
-        Shared across all rules and devices, after either result.
-        Repeated codes work after this delay.
+        Wait this many seconds after accepted scripts or rejected actions finish.
+        The cooldown is shared across all rules and devices, not per keypad.
+        Incoming attempts during actions or this delay are discarded, not queued.
+        The same code can be used again once the automation finishes. An action
+        error can abort the run before this delay starts.
       default: 5
       selector:
         number:
