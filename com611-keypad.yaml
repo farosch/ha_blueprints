@@ -3,6 +3,7 @@ blueprint:
   description: >-
     Handle esphome.com611 function, bell, or door-button events in Home Assistant.
     Add independent rules with their own addresses, event, codes, and script.
+    Every rule requires at least one nonblank device address.
     All matching rules run in list order. Function and bell events require a
     valid code. Door-button rules explicitly run without a code.
     The keypad beep acknowledges receipt, not authorization.
@@ -28,7 +29,7 @@ blueprint:
               selector:
                 text:
             addresses:
-              label: Device Addresses
+              label: Device Addresses (Required)
               required: true
               selector:
                 text:
@@ -93,6 +94,11 @@ variables:
             and rule.get('addresses', []) is sequence
             and rule.get('addresses', []) is not string
             and rule.get('addresses', []) is not mapping
+            and rule.get('addresses', []) | length > 0
+            and (rule.get('addresses', []) | select('string') | list | length)
+              == (rule.get('addresses', []) | length)
+            and '' not in (rule.get('addresses', []) | map('trim') | list)
+            and trigger.event.data.get('address') is not none
             and trigger.event.data.get('address') | string in
                 (rule.get('addresses', []) | map('string') | list)
             and trigger.event.data.get('action') == rule.get('event')

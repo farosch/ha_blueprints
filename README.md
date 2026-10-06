@@ -32,6 +32,9 @@ rules:
 		script: script.door_button
 ```
 
+Both blueprints require at least one nonblank text device address per configured rule. A missing address list, an empty list, or any blank entry makes the entire rule ineligible to run. Incoming events must also contain a device address.
+The fixed 20-rule editor cannot enforce conditional required fields when saving enabled rules without valid addresses are ignored. Unused disabled rules can remain empty.
+
 An event from any address in a rule can match; the devices do not need to send
 events together. Bell events use `ring`, not `bell`. Function and bell codes
 must match exactly and contain 1-8 ASCII digits. Keep codes as text to preserve
@@ -68,5 +71,5 @@ rules run in numeric order. Rejected actions and the cooldown are shared across
 the automation, with the same code-validation and event-filtering behavior as
 the script-based blueprint. Inline action templates can access `trigger.event.data`.
 
-Requires Home Assistant 2024.6.0 or newer. After publishing the new file, import:
+Requires Home Assistant 2024.10.0 or newer. After publishing the new file, import:
 https://github.com/farosch/ha_blueprints/blob/main/com611-keypad-actions.yaml

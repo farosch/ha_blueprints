@@ -3,7 +3,8 @@ blueprint:
   description: >-
     Handle esphome.com611 events with up to 20 independent rules and inline
     actions. Enable each rule and select its device addresses, keypad event,
-    codes, and actions. Bell uses ring. Function and bell codes must contain
+    codes, and actions. Every enabled rule requires at least one nonblank device
+    address. Bell uses ring. Function and bell codes must contain
     1-8 ASCII digits and match exactly. Door Button requires an empty event code
     and does not validate a code. All matching rules run in numeric order.
     Unconfigured address/event combinations are ignored. Rejection actions and
@@ -13,7 +14,7 @@ blueprint:
     out of version control; event payloads contain codes. Trace storage is disabled.
   domain: automation
   homeassistant:
-    min_version: "2024.6.0"
+    min_version: "2024.10.0"
   input:
     rule_01:
       name: Rule 01
@@ -25,7 +26,7 @@ blueprint:
           selector:
             boolean: {}
         rule_01_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -57,7 +58,7 @@ blueprint:
           selector:
             boolean: {}
         rule_02_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -89,7 +90,7 @@ blueprint:
           selector:
             boolean: {}
         rule_03_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -121,7 +122,7 @@ blueprint:
           selector:
             boolean: {}
         rule_04_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -153,7 +154,7 @@ blueprint:
           selector:
             boolean: {}
         rule_05_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -185,7 +186,7 @@ blueprint:
           selector:
             boolean: {}
         rule_06_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -217,7 +218,7 @@ blueprint:
           selector:
             boolean: {}
         rule_07_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -249,7 +250,7 @@ blueprint:
           selector:
             boolean: {}
         rule_08_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -281,7 +282,7 @@ blueprint:
           selector:
             boolean: {}
         rule_09_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -313,7 +314,7 @@ blueprint:
           selector:
             boolean: {}
         rule_10_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -345,7 +346,7 @@ blueprint:
           selector:
             boolean: {}
         rule_11_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -377,7 +378,7 @@ blueprint:
           selector:
             boolean: {}
         rule_12_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -409,7 +410,7 @@ blueprint:
           selector:
             boolean: {}
         rule_13_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -441,7 +442,7 @@ blueprint:
           selector:
             boolean: {}
         rule_14_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -473,7 +474,7 @@ blueprint:
           selector:
             boolean: {}
         rule_15_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -505,7 +506,7 @@ blueprint:
           selector:
             boolean: {}
         rule_16_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -537,7 +538,7 @@ blueprint:
           selector:
             boolean: {}
         rule_17_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -569,7 +570,7 @@ blueprint:
           selector:
             boolean: {}
         rule_18_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -601,7 +602,7 @@ blueprint:
           selector:
             boolean: {}
         rule_19_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -633,7 +634,7 @@ blueprint:
           selector:
             boolean: {}
         rule_20_addresses:
-          name: Device Addresses
+          name: Device Addresses (Required)
           default: []
           selector:
             text:
@@ -789,6 +790,11 @@ variables:
             and rule.addresses is sequence
             and rule.addresses is not string
             and rule.addresses is not mapping
+            and rule.addresses | length > 0
+            and (rule.addresses | select('string') | list | length)
+              == (rule.addresses | length)
+            and '' not in (rule.addresses | map('trim') | list)
+            and trigger.event.data.get('address') is not none
             and trigger.event.data.get('address') | string in
                 (rule.addresses | map('string') | list)
             and trigger.event.data.get('action') == rule.event
