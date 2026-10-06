@@ -1,0 +1,876 @@
+blueprint:
+  name: COM611 Keypad - 20 Action Rules
+  description: >-
+    Handle esphome.com611 events with up to 20 independent rules and inline
+    actions. Enable each rule and select its device addresses, keypad event,
+    codes, and actions. Bell uses ring. Function and bell codes must contain
+    1-8 ASCII digits and match exactly. Door Button requires an empty event code
+    and does not validate a code. All matching rules run in numeric order.
+    Unconfigured address/event combinations are ignored. Rejection actions and
+    cooldown are shared across all rules and devices. Events during actions or
+    cooldown are ignored. No rules or actions are enabled by default.
+    The keypad beep acknowledges receipt, not authorization. Keep real codes
+    out of version control; event payloads contain codes. Trace storage is disabled.
+  domain: automation
+  homeassistant:
+    min_version: "2024.6.0"
+  input:
+    rule_01:
+      name: Rule 01
+      collapsed: true
+      input:
+        rule_01_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_01_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_01_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_01_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_01_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_02:
+      name: Rule 02
+      collapsed: true
+      input:
+        rule_02_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_02_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_02_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_02_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_02_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_03:
+      name: Rule 03
+      collapsed: true
+      input:
+        rule_03_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_03_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_03_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_03_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_03_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_04:
+      name: Rule 04
+      collapsed: true
+      input:
+        rule_04_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_04_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_04_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_04_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_04_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_05:
+      name: Rule 05
+      collapsed: true
+      input:
+        rule_05_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_05_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_05_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_05_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_05_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_06:
+      name: Rule 06
+      collapsed: true
+      input:
+        rule_06_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_06_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_06_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_06_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_06_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_07:
+      name: Rule 07
+      collapsed: true
+      input:
+        rule_07_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_07_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_07_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_07_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_07_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_08:
+      name: Rule 08
+      collapsed: true
+      input:
+        rule_08_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_08_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_08_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_08_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_08_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_09:
+      name: Rule 09
+      collapsed: true
+      input:
+        rule_09_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_09_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_09_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_09_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_09_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_10:
+      name: Rule 10
+      collapsed: true
+      input:
+        rule_10_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_10_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_10_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_10_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_10_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_11:
+      name: Rule 11
+      collapsed: true
+      input:
+        rule_11_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_11_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_11_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_11_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_11_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_12:
+      name: Rule 12
+      collapsed: true
+      input:
+        rule_12_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_12_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_12_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_12_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_12_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_13:
+      name: Rule 13
+      collapsed: true
+      input:
+        rule_13_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_13_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_13_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_13_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_13_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_14:
+      name: Rule 14
+      collapsed: true
+      input:
+        rule_14_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_14_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_14_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_14_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_14_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_15:
+      name: Rule 15
+      collapsed: true
+      input:
+        rule_15_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_15_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_15_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_15_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_15_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_16:
+      name: Rule 16
+      collapsed: true
+      input:
+        rule_16_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_16_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_16_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_16_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_16_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_17:
+      name: Rule 17
+      collapsed: true
+      input:
+        rule_17_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_17_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_17_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_17_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_17_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_18:
+      name: Rule 18
+      collapsed: true
+      input:
+        rule_18_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_18_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_18_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_18_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_18_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_19:
+      name: Rule 19
+      collapsed: true
+      input:
+        rule_19_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_19_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_19_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_19_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_19_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rule_20:
+      name: Rule 20
+      collapsed: true
+      input:
+        rule_20_enabled:
+          name: Enabled
+          default: false
+          selector:
+            boolean: {}
+        rule_20_addresses:
+          name: Device Addresses
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_20_event:
+          name: Keypad Event
+          default: function
+          selector:
+            select:
+              options: [function, ring, door_button]
+        rule_20_codes:
+          name: Valid Codes
+          default: []
+          selector:
+            text:
+              multiple: true
+        rule_20_actions:
+          name: Actions
+          default: []
+          selector:
+            action: {}
+    rejected_actions:
+      name: Rejected Actions
+      description: >-
+        Runs once when an enabled rule matches the address/event but no rule
+        accepts the code. Configure feedback only; never unlock on rejection.
+      default: []
+      selector:
+        action: {}
+    cooldown:
+      name: Attempt Cooldown
+      description: Shared across all rules and devices, after either result.
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+          mode: box
+
+mode: single
+max_exceeded: silent
+
+trace:
+  stored_traces: 0
+
+variables:
+  configured_rules:
+    - id: 1
+      enabled: !input rule_01_enabled
+      addresses: !input rule_01_addresses
+      event: !input rule_01_event
+      codes: !input rule_01_codes
+    - id: 2
+      enabled: !input rule_02_enabled
+      addresses: !input rule_02_addresses
+      event: !input rule_02_event
+      codes: !input rule_02_codes
+    - id: 3
+      enabled: !input rule_03_enabled
+      addresses: !input rule_03_addresses
+      event: !input rule_03_event
+      codes: !input rule_03_codes
+    - id: 4
+      enabled: !input rule_04_enabled
+      addresses: !input rule_04_addresses
+      event: !input rule_04_event
+      codes: !input rule_04_codes
+    - id: 5
+      enabled: !input rule_05_enabled
+      addresses: !input rule_05_addresses
+      event: !input rule_05_event
+      codes: !input rule_05_codes
+    - id: 6
+      enabled: !input rule_06_enabled
+      addresses: !input rule_06_addresses
+      event: !input rule_06_event
+      codes: !input rule_06_codes
+    - id: 7
+      enabled: !input rule_07_enabled
+      addresses: !input rule_07_addresses
+      event: !input rule_07_event
+      codes: !input rule_07_codes
+    - id: 8
+      enabled: !input rule_08_enabled
+      addresses: !input rule_08_addresses
+      event: !input rule_08_event
+      codes: !input rule_08_codes
+    - id: 9
+      enabled: !input rule_09_enabled
+      addresses: !input rule_09_addresses
+      event: !input rule_09_event
+      codes: !input rule_09_codes
+    - id: 10
+      enabled: !input rule_10_enabled
+      addresses: !input rule_10_addresses
+      event: !input rule_10_event
+      codes: !input rule_10_codes
+    - id: 11
+      enabled: !input rule_11_enabled
+      addresses: !input rule_11_addresses
+      event: !input rule_11_event
+      codes: !input rule_11_codes
+    - id: 12
+      enabled: !input rule_12_enabled
+      addresses: !input rule_12_addresses
+      event: !input rule_12_event
+      codes: !input rule_12_codes
+    - id: 13
+      enabled: !input rule_13_enabled
+      addresses: !input rule_13_addresses
+      event: !input rule_13_event
+      codes: !input rule_13_codes
+    - id: 14
+      enabled: !input rule_14_enabled
+      addresses: !input rule_14_addresses
+      event: !input rule_14_event
+      codes: !input rule_14_codes
+    - id: 15
+      enabled: !input rule_15_enabled
+      addresses: !input rule_15_addresses
+      event: !input rule_15_event
+      codes: !input rule_15_codes
+    - id: 16
+      enabled: !input rule_16_enabled
+      addresses: !input rule_16_addresses
+      event: !input rule_16_event
+      codes: !input rule_16_codes
+    - id: 17
+      enabled: !input rule_17_enabled
+      addresses: !input rule_17_addresses
+      event: !input rule_17_event
+      codes: !input rule_17_codes
+    - id: 18
+      enabled: !input rule_18_enabled
+      addresses: !input rule_18_addresses
+      event: !input rule_18_event
+      codes: !input rule_18_codes
+    - id: 19
+      enabled: !input rule_19_enabled
+      addresses: !input rule_19_addresses
+      event: !input rule_19_event
+      codes: !input rule_19_codes
+    - id: 20
+      enabled: !input rule_20_enabled
+      addresses: !input rule_20_addresses
+      event: !input rule_20_event
+      codes: !input rule_20_codes
+  event_rules: >-
+    {% set matched = namespace(rules=[]) %}
+    {% for rule in configured_rules %}
+      {% if rule.enabled
+            and rule.addresses is sequence
+            and rule.addresses is not string
+            and rule.addresses is not mapping
+            and trigger.event.data.get('address') | string in
+                (rule.addresses | map('string') | list)
+            and trigger.event.data.get('action') == rule.event
+            and rule.event in ['function', 'ring', 'door_button'] %}
+        {% set matched.rules = matched.rules + [rule] %}
+      {% endif %}
+    {% endfor %}
+    {{ matched.rules }}
+  matching_rules: >-
+    {% set matched = namespace(ids=[]) %}
+    {% set code = trigger.event.data.get('code') %}
+    {% for rule in event_rules %}
+      {% if (rule.event == 'door_button' and code == '')
+            or (rule.event in ['function', 'ring']
+                and rule.codes is sequence
+                and rule.codes is not string
+                and rule.codes is not mapping
+                and code is string and 1 <= code | length <= 8
+                and code.isascii() and code.isdigit()
+                and code in rule.codes) %}
+        {% set matched.ids = matched.ids + [rule.id] %}
+      {% endif %}
+    {% endfor %}
+    {{ matched.ids }}
+
+triggers:
+  - trigger: event
+    event_type: esphome.com611
+
+conditions:
+  - condition: template
+    value_template: "{{ event_rules | length > 0 }}"
+
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ matching_rules | length > 0 }}"
+        sequence:
+          - repeat:
+              for_each: "{{ matching_rules }}"
+              sequence:
+                - choose:
+                    - conditions: "{{ repeat.item == 1 }}"
+                      sequence: !input rule_01_actions
+                    - conditions: "{{ repeat.item == 2 }}"
+                      sequence: !input rule_02_actions
+                    - conditions: "{{ repeat.item == 3 }}"
+                      sequence: !input rule_03_actions
+                    - conditions: "{{ repeat.item == 4 }}"
+                      sequence: !input rule_04_actions
+                    - conditions: "{{ repeat.item == 5 }}"
+                      sequence: !input rule_05_actions
+                    - conditions: "{{ repeat.item == 6 }}"
+                      sequence: !input rule_06_actions
+                    - conditions: "{{ repeat.item == 7 }}"
+                      sequence: !input rule_07_actions
+                    - conditions: "{{ repeat.item == 8 }}"
+                      sequence: !input rule_08_actions
+                    - conditions: "{{ repeat.item == 9 }}"
+                      sequence: !input rule_09_actions
+                    - conditions: "{{ repeat.item == 10 }}"
+                      sequence: !input rule_10_actions
+                    - conditions: "{{ repeat.item == 11 }}"
+                      sequence: !input rule_11_actions
+                    - conditions: "{{ repeat.item == 12 }}"
+                      sequence: !input rule_12_actions
+                    - conditions: "{{ repeat.item == 13 }}"
+                      sequence: !input rule_13_actions
+                    - conditions: "{{ repeat.item == 14 }}"
+                      sequence: !input rule_14_actions
+                    - conditions: "{{ repeat.item == 15 }}"
+                      sequence: !input rule_15_actions
+                    - conditions: "{{ repeat.item == 16 }}"
+                      sequence: !input rule_16_actions
+                    - conditions: "{{ repeat.item == 17 }}"
+                      sequence: !input rule_17_actions
+                    - conditions: "{{ repeat.item == 18 }}"
+                      sequence: !input rule_18_actions
+                    - conditions: "{{ repeat.item == 19 }}"
+                      sequence: !input rule_19_actions
+                    - conditions: "{{ repeat.item == 20 }}"
+                      sequence: !input rule_20_actions
+    default: !input rejected_actions
+  - delay: !input cooldown

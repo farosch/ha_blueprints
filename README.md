@@ -53,3 +53,20 @@ payloads contain codes; blueprint automation trace storage is disabled.
 
 After publishing changes to GitHub, use **Re-import blueprint** in Home Assistant
 and reload automations, then reopen the automation editor.
+
+## COM611 keypad with inline actions
+
+The [20-rule action blueprint](com611-keypad-actions.yaml) is an alternative
+that does not require separate scripts. It provides 20 collapsed rule sections,
+each with an enable switch, multiple device addresses, one keypad event,
+multiple valid codes, and Home Assistant's normal action editor.
+
+Expand a rule, configure its fields and actions, and enable it. All rules start
+disabled. Select `ring` for the bell event; `door_button` does not use the code
+list and requires an empty code in the incoming event. All matching enabled
+rules run in numeric order. Rejected actions and the cooldown are shared across
+the automation, with the same code-validation and event-filtering behavior as
+the script-based blueprint. Inline action templates can access `trigger.event.data`.
+
+Requires Home Assistant 2024.6.0 or newer. After publishing the new file, import:
+https://github.com/farosch/ha_blueprints/blob/main/com611-keypad-actions.yaml
