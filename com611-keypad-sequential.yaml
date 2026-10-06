@@ -1,0 +1,239 @@
+blueprint:
+  name: COM611 Keypad - Dynamic If/Then Rules
+  description: >-
+    Handle esphome.com611 events with unlimited named native If/Then rules and
+    inline actions. Rules are inserted when the automation loads, not built at
+    runtime. Configure each device address with its own dedicated timer helper.
+    Each rule must start with the documented match-mode condition and its Then
+    block must start with the documented Variables action. Invalid device/timer
+    configuration fails closed. Function and bell payloads require 1-8 ASCII digits; Door Button
+    requires an empty code. Rule conditions decide which codes are authorized.
+    Built-in optional diagnostics omit codes and trace storage is disabled.
+    Keep real codes out of version control. See the repository README for setup.
+  domain: automation
+  homeassistant:
+    min_version: "2024.10.0"
+  input:
+    devices:
+      name: Devices and Cooldown Timers
+      description: >-
+        Add every allowed device address and a dedicated timer helper. Addresses
+        and timers must be unique. Missing, blank, or unmapped addresses never run.
+        Do not share timers with other automations.
+      default: []
+      selector:
+        object:
+          multiple: true
+          label_field: address
+          fields:
+            address:
+              label: Device Address (Required)
+              required: true
+              selector:
+                text: {}
+            timer:
+              label: Dedicated Cooldown Timer
+              required: true
+              selector:
+                entity:
+                  filter:
+                    domain: timer
+    rules:
+      name: Named If/Then Rules
+      description: >-
+        Add rules in execution order. The first If condition must be
+        {{ keypad_match_mode == 'all' or not keypad_matched }}.
+        The first Then action must set keypad_rule to this rule's name,
+        keypad_matched to true, and keypad_matched_rules to
+        {{ keypad_matched_rules + [keypad_rule] }}. Add address, event, and code
+        conditions after the first condition, and inline actions after Variables.
+        Use keypad.address, keypad.event, and keypad.code in conditions.
+      default: []
+      selector:
+        object:
+          multiple: true
+          label_field: alias
+          fields:
+            alias:
+              label: Rule Name
+              required: true
+              selector:
+                text: {}
+            enabled:
+              label: Enabled
+              selector:
+                boolean: {}
+            if:
+              label: If Conditions
+              required: true
+              selector:
+                condition: {}
+            then:
+              label: Then Actions
+              required: true
+              selector:
+                action: {}
+    match_mode:
+      name: Matching Mode
+      default: all
+      selector:
+        select:
+          options:
+            - label: Run All Matching Rules
+              value: all
+            - label: Run First Matching Rule Only
+              value: first
+    rejected_actions:
+      name: Rejected Actions
+      description: >-
+        Runs once for an allowed device with an invalid payload or no matching
+        rule. Configure feedback only; never unlock on rejection.
+      default: []
+      selector:
+        action: {}
+    cooldown:
+      name: Per-Device Attempt Cooldown
+      description: >-
+        Starts before evaluating an attempt, accepted or rejected. Attempts from
+        this device during cooldown are discarded; other devices remain eligible.
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+          mode: box
+    diagnostics:
+      name: Safe Diagnostics
+      description: >-
+        Records address, keypad event, outcome, and matched rule names in the
+        Activity log. Never records the code. Keep codes out of rule names.
+      default: false
+      selector:
+        boolean: {}
+
+mode: queued
+max: 100
+max_exceeded: silent
+
+trace:
+  stored_traces: 0
+
+variables:
+  keypad_devices: !input devices
+  keypad_match_mode: !input match_mode
+  keypad_cooldown: !input cooldown
+  keypad_diagnostics: !input diagnostics
+  keypad: >-
+    {{ {'address': trigger.event.data.get('address') | string,
+        'event': trigger.event.data.get('action'),
+        'code': trigger.event.data.get('code'),
+        'time': as_timestamp(trigger.event.time_fired)} }}
+  keypad_configuration_valid: >-
+    {% set checked = namespace(valid=true, addresses=[], timers=[]) %}
+    {% if keypad_devices is not sequence or keypad_devices is string
+          or keypad_devices is mapping
+          or keypad_match_mode not in ['all', 'first'] %}
+      {% set checked.valid = false %}
+    {% else %}
+      {% for device in keypad_devices %}
+        {% if device is not mapping or device.get('address') is not string
+              or device.get('address') | trim == ''
+              or device.get('address') != device.get('address') | trim
+              or device.get('timer') is not string
+              or not device.get('timer', '').startswith('timer.')
+              or device.get('address') in checked.addresses
+              or device.get('timer') in checked.timers %}
+          {% set checked.valid = false %}
+        {% else %}
+          {% set checked.addresses = checked.addresses + [device.address] %}
+          {% set checked.timers = checked.timers + [device.timer] %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {{ checked.valid }}
+  keypad_timer: >-
+    {% set selected = namespace(timer='') %}
+    {% if keypad_configuration_valid %}
+      {% for device in keypad_devices %}
+        {% if device.address == keypad.address %}
+          {% set selected.timer = device.timer %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {{ selected.timer }}
+  keypad_payload_valid: >-
+    {{ (keypad.event == 'door_button' and keypad.code == '')
+       or (keypad.event in ['function', 'ring'] and keypad.code is string
+           and 1 <= keypad.code | length <= 8
+           and keypad.code.isascii() and keypad.code.isdigit()) }}
+
+triggers:
+  - trigger: event
+    event_type: esphome.com611
+
+conditions:
+  - condition: template
+    value_template: >-
+      {{ trigger.event.data.get('address') is not none
+         and keypad.address | trim != ''
+         and keypad.event in ['function', 'ring', 'door_button'] }}
+
+actions:
+  - variables:
+      keypad_matched: false
+      keypad_rule: ""
+      keypad_matched_rules: []
+      keypad_outcome: rejected
+  - if: "{{ not keypad_configuration_valid }}"
+    then:
+      - if: "{{ keypad_diagnostics }}"
+        then:
+          - action: logbook.log
+            data:
+              name: COM611 Keypad
+              message: >-
+                address={{ keypad.address }}; event={{ keypad.event }};
+                outcome=invalid_configuration
+      - stop: Invalid keypad configuration
+  - if: "{{ keypad_timer == '' }}"
+    then:
+      - stop: Unconfigured device address
+  - if: "{{ not is_state(keypad_timer, 'idle') }}"
+    then:
+      - if: "{{ keypad_diagnostics }}"
+        then:
+          - action: logbook.log
+            data:
+              name: COM611 Keypad
+              message: >-
+                address={{ keypad.address }}; event={{ keypad.event }};
+                outcome=cooldown_or_timer_unavailable
+      - stop: Device cooldown timer is not idle
+  - if: >-
+      {{ keypad.time <= as_timestamp(states[keypad_timer].last_changed) }}
+    then:
+      - stop: Stale queued attempt
+  - action: timer.start
+    target:
+      entity_id: "{{ keypad_timer }}"
+    data:
+      duration: "{{ keypad_cooldown }}"
+  - if: "{{ keypad_payload_valid }}"
+    then:
+      - sequence: !input rules
+  - if: "{{ keypad_matched }}"
+    then:
+      - variables:
+          keypad_outcome: accepted
+    else:
+      - sequence: !input rejected_actions
+  - if: "{{ keypad_diagnostics }}"
+    then:
+      - action: logbook.log
+        data:
+          name: COM611 Keypad
+          message: >-
+            address={{ keypad.address }}; event={{ keypad.event }};
+            outcome={{ keypad_outcome }};
+            rules={{ keypad_matched_rules | join(', ') }}
