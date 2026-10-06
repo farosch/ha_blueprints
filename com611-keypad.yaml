@@ -36,7 +36,6 @@ blueprint:
             event:
               label: Keypad Event
               required: true
-              default: function
               selector:
                 select:
                   options:
@@ -48,7 +47,6 @@ blueprint:
                       value: door_button
             codes:
               label: Valid Codes
-              default: []
               selector:
                 text:
                   multiple: true
