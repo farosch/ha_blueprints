@@ -2,63 +2,76 @@ blueprint:
   name: Keypad Code Validation
   description: >-
     Handle esphome.com611 function, bell, or door-button events in Home Assistant.
-    Select one or more device addresses and keypad events per automation.
-    Function and bell events require a valid code. Selecting the door button
-    explicitly runs accepted actions without a code. No codes or actions are
-    configured by default. The keypad beep acknowledges receipt, not
-    authorization. Attempts during the cooldown are ignored.
+    Add independent rules with their own addresses, event, codes, and script.
+    All matching rules run in list order. Function and bell events require a
+    valid code. Door-button rules explicitly run without a code.
+    The keypad beep acknowledges receipt, not authorization.
+    Attempts during the shared cooldown are ignored. Keep real codes out of
+    version control; event payloads contain codes.
   domain: automation
   input:
-    keypad_address:
-      name: Device Addresses
-      description: Add each device address as a separate text entry.
-      default: ["7"]
-      selector:
-        text:
-          multiple: true
-    keypad_action:
-      name: Keypad Events
+    rules:
+      name: Keypad Rules
       description: >-
-        Select one or more events to handle. Door button does not validate a code;
-        only select it if that button should run your accepted actions.
-      default: [function]
-      selector:
-        select:
-          multiple: true
-          options:
-            - label: Function (F)
-              value: function
-            - label: Bell / Ring
-              value: ring
-            - label: Door Button
-              value: door_button
-    valid_codes:
-      name: Valid Codes
-      description: >-
-        Add each code as a separate text entry, preserving leading zeros.
-        Used for function and bell events only. Keep real codes out of version
-        control; event payloads and automation traces contain codes.
+        Each rule runs its selected script when its addresses, event, and code
+        match. Bell uses the event value ring. Codes are not used for Door Button.
+        No events are handled when this list is empty.
       default: []
       selector:
-        text:
+        object:
           multiple: true
-    accepted_actions:
-      name: Accepted Actions
-      description: >-
-        Runs for a valid function/bell code or the selected door button.
-        Configure an explicit unlock or feedback action here.
-      default: []
-      selector:
-        action:
+          label_field: name
+          fields:
+            name:
+              label: Rule Name
+              required: true
+              selector:
+                text:
+            addresses:
+              label: Device Addresses
+              required: true
+              selector:
+                text:
+                  multiple: true
+            event:
+              label: Keypad Event
+              required: true
+              default: function
+              selector:
+                select:
+                  options:
+                    - label: Function (F)
+                      value: function
+                    - label: Bell / Ring
+                      value: ring
+                    - label: Door Button
+                      value: door_button
+            codes:
+              label: Valid Codes
+              default: []
+              selector:
+                text:
+                  multiple: true
+            script:
+              label: Script to Run
+              required: true
+              selector:
+                entity:
+                  filter:
+                    domain: script
     rejected_actions:
       name: Rejected Actions
-      description: Configure feedback only; never unlock on rejection.
+      description: >-
+        Runs once when a configured address/event has no matching code rule.
+        Configure feedback only; never unlock on rejection.
       default: []
       selector:
         action:
     cooldown:
       name: Attempt Cooldown
-      description: Applies after either result; repeated codes work after this delay.
+      description: >-
+        Shared across all rules and devices, after either result.
+        Repeated codes work after this delay.
       default: 5
       selector:
         number:
@@ -74,9 +87,38 @@ trace:
   stored_traces: 0
 
 variables:
-  keypad_address: !input keypad_address
-  keypad_action: !input keypad_action
-  valid_codes: !input valid_codes
+  rules: !input rules
+  event_rules: >-
+    {% set matched = namespace(rules=[]) %}
+    {% for rule in rules %}
+      {% if rule is mapping
+            and rule.get('addresses', []) is sequence
+            and rule.get('addresses', []) is not string
+            and rule.get('addresses', []) is not mapping
+            and trigger.event.data.get('address') | string in
+                (rule.get('addresses', []) | map('string') | list)
+            and trigger.event.data.get('action') == rule.get('event')
+            and rule.get('event') in ['function', 'ring', 'door_button'] %}
+        {% set matched.rules = matched.rules + [rule] %}
+      {% endif %}
+    {% endfor %}
+    {{ matched.rules }}
+  matching_rules: >-
+    {% set matched = namespace(rules=[]) %}
+    {% set code = trigger.event.data.get('code') %}
+    {% for rule in event_rules %}
+      {% if (rule.get('event') == 'door_button' and code == '')
+            or (rule.get('event') in ['function', 'ring']
+                and rule.get('codes', []) is sequence
+                and rule.get('codes', []) is not string
+                and rule.get('codes', []) is not mapping
+                and code is string and 1 <= code | length <= 8
+                and code.isascii() and code.isdigit()
+                and code in rule.get('codes', [])) %}
+        {% set matched.rules = matched.rules + [rule] %}
+      {% endif %}
+    {% endfor %}
+    {{ matched.rules }}
 
 triggers:
   - trigger: event
@@ -84,27 +126,22 @@ triggers:
 
 conditions:
   - condition: template
-    value_template: >-
-      {{ trigger.event.data.get('address') in
-         ([keypad_address] if keypad_address is string else keypad_address)
-         and trigger.event.data.get('action') in
-         ([keypad_action] if keypad_action is string else keypad_action) }}
+    value_template: "{{ event_rules | length > 0 }}"
 
 actions:
   - choose:
       - conditions:
           - condition: template
-            value_template: >-
-                {{ (trigger.event.data.get('action') == 'door_button'
-                  and trigger.event.data.get('code') == '')
-                  or (trigger.event.data.get('action') in ['function', 'ring']
-                  and valid_codes is sequence and valid_codes is not string
-                 and valid_codes is not mapping
-                 and trigger.event.data.get('code') is string
-                 and 1 <= trigger.event.data.get('code') | length <= 8
-                 and trigger.event.data.get('code').isascii()
-                 and trigger.event.data.get('code').isdigit()
-                 and trigger.event.data.get('code') in valid_codes) }}
-        sequence: !input accepted_actions
+            value_template: "{{ matching_rules | length > 0 }}"
+        sequence:
+          - repeat:
+              for_each: "{{ matching_rules }}"
+              sequence:
+                - action: "{{ repeat.item.script }}"
+                  data:
+                    keypad_address: "{{ trigger.event.data.get('address') }}"
+                    keypad_event: "{{ trigger.event.data.get('action') }}"
+                    keypad_code: "{{ trigger.event.data.get('code') }}"
+                    keypad_rule: "{{ repeat.item.name }}"
     default: !input rejected_actions
   - delay: !input cooldown
