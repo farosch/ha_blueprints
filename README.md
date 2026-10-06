@@ -1,2 +1,3 @@
-# ha_blueprints
+# Home Assistant blueprints
+
 A collection of personal Home Assistant blueprints

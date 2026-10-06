@@ -1,0 +1,99 @@
+blueprint:
+  name: Keypad Code Validation
+  description: >-
+    Handle esphome.com611 function, bell, or door-button events in Home Assistant.
+    Function and bell events require a valid code. Selecting the door button
+    explicitly runs accepted actions without a code. No codes or actions are
+    configured by default. The keypad beep acknowledges receipt, not
+    authorization. Attempts during the cooldown are ignored.
+  domain: automation
+  input:
+    keypad_address:
+      name: Device Address
+      default: "7"
+      selector:
+        text:
+    keypad_action:
+      name: Keypad Action
+      description: >-
+        Select the event to handle. Door button does not validate a code;
+        only select it if that button should run your accepted actions.
+      default: function
+      selector:
+        select:
+          options:
+            - label: Function (F)
+              value: function
+            - label: Bell / Ring
+              value: ring
+            - label: Door Button
+              value: door_button
+    valid_codes:
+      name: Valid Codes
+      description: >-
+        Add each code as a separate text entry, preserving leading zeros.
+        Used for function and bell events only. Keep real codes out of version
+        control; event payloads and automation traces contain codes.
+      default: []
+      selector:
+        text:
+          multiple: true
+    accepted_actions:
+      name: Accepted Actions
+      description: >-
+        Runs for a valid function/bell code or the selected door button.
+        Configure an explicit unlock or feedback action here.
+      default: []
+      selector:
+        action:
+    rejected_actions:
+      name: Rejected Actions
+      description: Configure feedback only; never unlock on rejection.
+      default: []
+      selector:
+        action:
+    cooldown:
+      name: Attempt Cooldown
+      description: Applies after either result; repeated codes work after this delay.
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+          mode: box
+
+mode: single
+max_exceeded: silent
+
+trace:
+  stored_traces: 0
+
+variables:
+  valid_codes: !input valid_codes
+
+triggers:
+  - trigger: event
+    event_type: esphome.com611
+    event_data:
+      address: !input keypad_address
+      action: !input keypad_action
+
+actions:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >-
+                {{ (trigger.event.data.get('action') == 'door_button'
+                  and trigger.event.data.get('code') == '')
+                  or (trigger.event.data.get('action') in ['function', 'ring']
+                  and valid_codes is sequence and valid_codes is not string
+                 and valid_codes is not mapping
+                 and trigger.event.data.get('code') is string
+                 and 1 <= trigger.event.data.get('code') | length <= 8
+                 and trigger.event.data.get('code').isascii()
+                 and trigger.event.data.get('code').isdigit()
+                 and trigger.event.data.get('code') in valid_codes) }}
+        sequence: !input accepted_actions
+    default: !input rejected_actions
+  - delay: !input cooldown
