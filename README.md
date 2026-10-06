@@ -5,9 +5,10 @@ A collection of personal Home Assistant blueprints
 ## COM611 keypad rules
 
 The [keypad blueprint](com611-keypad.yaml) accepts any number of independent
-rules in one automation. Each rule has a required name and enable switch,
-device addresses, one keypad event, valid codes, and a script to run. Enable
-each rule explicitly; a rule with a missing or false enable switch is ignored.
+rules in one automation. Each rule has a required name and Enabled/Disabled state,
+device addresses, one keypad event, valid codes, and a script to run. Select
+**Enabled** explicitly; a rule with any other or missing state is ignored.
+The rule overview shows **Enabled** or **Disabled** beneath each rule name.
 Names must be nonblank, and must not contain access codes. Create the scripts in Home Assistant
 and select them in the rule editor; each script can contain any sequence of
 actions.
@@ -16,9 +17,9 @@ Example rules (codes and script names are placeholders, not recommended access c
 
 | Rule | Enabled | Device Addresses | Event | Valid Codes | Script |
 | --- | --- | --- | --- | --- | --- |
-| Function group | Yes | 6, 7, 9 | `function` | `0001` | `script.function_group` |
-| Bell group | Yes | 8, 2 | `ring` | `0002` | `script.bell_group` |
-| Door button | Yes | 4 | `door_button` | None | `script.door_button` |
+| Function group | Enabled | 6, 7, 9 | `function` | `0001` | `script.function_group` |
+| Bell group | Enabled | 8, 2 | `ring` | `0002` | `script.bell_group` |
+| Door button | Enabled | 4 | `door_button` | None | `script.door_button` |
 
 Each rule requires at least one nonblank text device address. A missing address
 list, an empty list, or any blank entry makes the entire rule ineligible to run.
@@ -53,8 +54,10 @@ by default and logs address, event, applicable rule names, and one of these reas
 
 Rejection reports never contain codes. Custom feedback actions and rule names
 must also avoid exposing them. Unconfigured addresses/events are ignored.
-The attempt cooldown applies to the whole automation, across all rules and
-devices; events while actions or the cooldown are running are ignored.
+**Rejection Cooldown** applies only after rejected actions finish and is shared
+across all rules and devices. Accepted attempts have no cooldown delay. Events
+while scripts, rejection feedback, or the rejection cooldown are running are
+ignored, not queued. A reporting or feedback error can prevent the cooldown.
 
 Only the rule-based configuration is supported. Existing automations must be
 reconfigured with rules after updating this blueprint. The rejected actions and
@@ -65,8 +68,9 @@ payloads contain codes; blueprint automation trace storage is disabled.
 ## Importing and updating
 
 Requires Home Assistant 2026.9.4 or newer, the released object-selector schema
-verified for this blueprint. Reconfigure existing rules with enable switches
-and update called scripts to use the structured metadata after upgrading.
+verified for this blueprint. Re-select **Enabled** or **Disabled** for existing
+rules after upgrading; the previous boolean states are no longer accepted.
+Update called scripts to use the structured metadata after upgrading.
 
 Import this unpinned URL in Home Assistant to track updates on `main`:
 https://github.com/farosch/ha_blueprints/blob/main/com611-keypad.yaml

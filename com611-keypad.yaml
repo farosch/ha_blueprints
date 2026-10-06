@@ -3,7 +3,7 @@ blueprint:
   description: >-
     Respond to Siedle COM611 keypad events sent by an ESP32 through ESPHome
     (esphome.com611). Create named rules with device addresses, a keypad event,
-    authorized codes, and a script, then enable each rule explicitly.
+    authorized codes, and a script, then set each rule's state to Enabled.
     Function and bell events require an exact code match. Door-button rules
     authorize an empty-code button event without checking a code list.
 
@@ -11,7 +11,8 @@ blueprint:
     keypad.address, keypad.event, and keypad.rule as structured text metadata;
     entered codes and configured code lists are not forwarded. Unconfigured
     address/event combinations are ignored. Attempts while the automation is
-    running or waiting through its shared cooldown are discarded, not queued.
+    running or waiting through its shared rejection cooldown are discarded,
+    not queued. Accepted attempts have no cooldown delay.
 
     Rejections can be reported in Activity without entered codes. Automation
     trace storage is disabled, but incoming event payloads still contain codes.
@@ -25,7 +26,7 @@ blueprint:
       name: Keypad Rules
       description: >-
         Add one rule per address/event/code combination and choose the script
-        to run. Give each rule a nonblank name and turn on Enabled; disabled
+        to run. Give each rule a nonblank name and select Enabled; disabled
         rules do not match or cause rejection feedback. List order sets priority.
 
         Enter each address as a separate text entry using the address from the
@@ -52,10 +53,11 @@ blueprint:
               selector:
                 text:
             enabled:
-              label: Enabled
+              label: Rule State
               required: true
               selector:
-                boolean:
+                select:
+                  options: [Enabled, Disabled]
             addresses:
               label: Device Addresses (Required)
               required: true
@@ -127,13 +129,13 @@ blueprint:
       selector:
         action:
     cooldown:
-      name: Attempt Cooldown
+      name: Rejection Cooldown
       description: >-
-        Wait this many seconds after accepted scripts or rejected actions finish.
-        The cooldown is shared across all rules and devices, not per keypad.
-        Incoming attempts during actions or this delay are discarded, not queued.
-        The same code can be used again once the automation finishes. An action
-        error can abort the run before this delay starts.
+        Wait this many seconds after rejected actions finish. Accepted attempts
+        have no cooldown delay. The rejection cooldown is shared across all rules
+        and devices, not per keypad. Incoming attempts during actions or this
+        delay are discarded, not queued. A rejection-reporting or feedback error
+        can abort the run before this delay starts.
       default: 5
       selector:
         number:
@@ -156,7 +158,7 @@ variables:
     {% set matched = namespace(rules=[]) %}
     {% for rule in rules %}
       {% if rule is mapping
-        and rule.get('enabled', false) is sameas true
+        and rule.get('enabled') == 'Enabled'
         and rule.get('name') is string and rule.get('name') | trim != ''
             and rule.get('addresses', []) is sequence
             and rule.get('addresses', []) is not string
@@ -239,4 +241,4 @@ actions:
                 reason={{ rejection_reason }};
                 rules={{ event_rules | map(attribute='name') | join(', ') }}
       - sequence: !input rejected_actions
-  - delay: !input cooldown
+      - delay: !input cooldown
